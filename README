@@ -21,7 +21,17 @@ The following commands are supported.
 
         Example:
 
-            cs_eth_mem 192.168.0.14 write 0x44000000 0x50000 > image
+            cs_eth_mem 192.168.0.14 read 0x44000000 0x50000 > image
+         
+    * readimage
+        Read data from memory (framebuffer) to stdout in png format.
+        Usage:
+
+            cs_eth_mem 192.168.0.14 readimage <adress> <width> <height>
+
+        Example:
+
+            cs_eth_mem 192.168.0.14 readimage 0x44000000 0x500 0x400 > image.pnm
          
     * set
         Set a single word:

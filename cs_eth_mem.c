@@ -160,7 +160,7 @@ void command_readimage(const char *ip, int argc, char **argv)
     }
     address = strtol(argv[0], NULL, 16);
     width = strtol(argv[1], NULL, 16);
-    height = strtol(argv[1], NULL, 16);
+    height = strtol(argv[2], NULL, 16);
     length = width*height*sizeof(int);
 
     fprintf(stderr, "Read 0x%08X bytes from 0x%08X\n", length, address);
@@ -198,14 +198,17 @@ void command_readimage(const char *ip, int argc, char **argv)
         } else if ( t == 7 ) {
             size_t m_r = 0;
             // we can read package
-            char package[1025];
+            uint8_t package[1025];
             recv_data ( sockfd, package, &m_r);
             fprintf(stderr, "\rReading: % 10u", length);
             unsigned int iter = 0;
             for(iter = 0; iter < m_r; iter++) {
                 //fwrite(package, m_r, 1, stdout);
-                fprintf(stdout, "%3d ", package[iter]);
-                if((index%width) == 0) { fprintf(stdout, "\n");}
+                if((iter%4) != 3) {
+                    fprintf(stdout, "%3u ", package[iter]);
+                }
+                index++;
+                if((index%(sizeof(4)*width)) == 0) { fprintf(stdout, "\n");}
             }
             length-=m_r;
             address+=m_r;
