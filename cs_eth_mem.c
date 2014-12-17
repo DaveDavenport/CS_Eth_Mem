@@ -146,6 +146,78 @@ void command_read(const char *ip, int argc, char **argv)
     close(sockfd);
 }
 
+void command_readimage(const char *ip, int argc, char **argv)
+{
+    int sockfd;
+    struct sockaddr_in servaddr;
+    unsigned int address = 0;
+    unsigned int length = 0;
+    unsigned int width = 0, height = 0;
+
+    if(argc != 3) {
+        fprintf(stderr, "Pass an address and length.\n");
+        exit(EXIT_FAILURE);
+    }
+    address = strtol(argv[0], NULL, 16);
+    width = strtol(argv[1], NULL, 16);
+    height = strtol(argv[1], NULL, 16);
+    length = width*height*sizeof(int);
+
+    fprintf(stderr, "Read 0x%08X bytes from 0x%08X\n", length, address);
+    // Open socket
+    sockfd=socket(AF_INET,SOCK_DGRAM,0);
+    if(sockfd <  0) {
+        fprintf(stderr, "Failed to open socket: %s\n", strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+    // Listen on the port, set destination. 
+    memset(&servaddr,0,sizeof(servaddr));
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_addr.s_addr=inet_addr(ip);
+    servaddr.sin_port=htons(5000);
+    // Start listening.
+    bind(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));
+    // Create read message.
+    fprintf(stderr, "Reading: % 10u", length);
+
+
+    unsigned int index = 0;
+    fprintf(stdout, "P3\n" );
+    fprintf(stdout, "%d %d\n255\n", width, height );
+    do {
+        int m_l= (length > 1024)?1024:length;
+        char msg[7];
+        create_r_header(msg, address, m_l);
+        // Send header.
+        size_t t = send_packet(sockfd, &servaddr, msg, 7);
+        if( t == -1 )  {
+            fprintf(stderr, "Failed to send message: %s\n", strerror(errno));
+            close(sockfd);
+            exit(EXIT_FAILURE);
+        } else if ( t == 7 ) {
+            size_t m_r = 0;
+            // we can read package
+            char package[1025];
+            recv_data ( sockfd, package, &m_r);
+            fprintf(stderr, "\rReading: % 10u", length);
+            unsigned int iter = 0;
+            for(iter = 0; iter < m_r; iter++) {
+                //fwrite(package, m_r, 1, stdout);
+                fprintf(stdout, "%3d ", package[iter]);
+                if((index%width) == 0) { fprintf(stdout, "\n");}
+            }
+            length-=m_r;
+            address+=m_r;
+        }
+    }while(length >0);
+
+    // new line
+    fprintf(stderr, "\rReading: % 10u", length);
+    fprintf(stderr, "\n");
+    // Close
+    close(sockfd);
+}
 void command_write(const char *ip, int argc, char **argv)
 {
     int sockfd;
@@ -306,6 +378,10 @@ int main(int argc, char**argv)
     // Read from memory to stdout
     else if ( strcmp(command, "read") == 0 ) {
         command_read (ip, argc-3, &argv[3] );
+    }
+    // Read image from memory to stdout
+    else if ( strcmp(command, "readimage") == 0 ) {
+        command_readimage (ip, argc-3, &argv[3] );
     }
     // Set memory address to value
     else if ( strcmp(command, "set")  == 0 ) {
