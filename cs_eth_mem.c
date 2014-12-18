@@ -116,7 +116,7 @@ void command_read(const char *ip, int argc, char **argv)
     // Start listening.
     bind(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));
     // Create read message.
-    fprintf(stderr, "Reading: % 10u", length);
+    fprintf(stderr, "Reading: %10u", length);
     do {
         int m_l= (length > 1024)?1024:length;
         char msg[7];
@@ -132,7 +132,7 @@ void command_read(const char *ip, int argc, char **argv)
             // we can read package
             char package[1025];
             recv_data ( sockfd, package, &m_r);
-            fprintf(stderr, "\rReading: % 10u", length);
+            fprintf(stderr, "\rReading: %10u", length);
             fwrite(package, m_r, 1, stdout);
             length-=m_r;
             address+=m_r;
@@ -140,7 +140,7 @@ void command_read(const char *ip, int argc, char **argv)
     }while(length >0);
 
     // new line
-    fprintf(stderr, "\rReading: % 10u", length);
+    fprintf(stderr, "\rReading: %10u", length);
     fprintf(stderr, "\n");
     // Close
     close(sockfd);
@@ -179,7 +179,7 @@ void command_readimage(const char *ip, int argc, char **argv)
     // Start listening.
     bind(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));
     // Create read message.
-    fprintf(stderr, "Reading: % 10u", length);
+    fprintf(stderr, "Reading: %10u", length);
 
 
     unsigned int index = 0;
@@ -200,7 +200,7 @@ void command_readimage(const char *ip, int argc, char **argv)
             // we can read package
             uint8_t package[1025];
             recv_data ( sockfd, package, &m_r);
-            fprintf(stderr, "\rReading: % 10u", length);
+            fprintf(stderr, "\rReading: %10u", length);
             unsigned int iter = 0;
             for(iter = 0; iter < m_r; iter++) {
                 //fwrite(package, m_r, 1, stdout);
@@ -216,7 +216,7 @@ void command_readimage(const char *ip, int argc, char **argv)
     }while(length >0);
 
     // new line
-    fprintf(stderr, "\rReading: % 10u", length);
+    fprintf(stderr, "\rReading: %10u", length);
     fprintf(stderr, "\n");
     // Close
     close(sockfd);
@@ -251,7 +251,7 @@ void command_write(const char *ip, int argc, char **argv)
     // Create read message.
     size_t l = 0;
     char buffer[1024+7];
-    fprintf(stderr, "Writing: % 10u", address - address_start);
+    fprintf(stderr, "Writing: %10u", address - address_start);
     while((l = fread(&buffer[7], 1, 1024, stdin)) > 0)
     {
         create_w_header(buffer, address, l);
@@ -259,10 +259,10 @@ void command_write(const char *ip, int argc, char **argv)
         send_packet(sockfd, &servaddr, buffer, l+7);
         receiving_response(sockfd);
         address+=l;
-        fprintf(stderr, "\rWriting: % 10u", address - address_start);
+        fprintf(stderr, "\rWriting: %10u", address - address_start);
     }
 
-    fprintf(stderr, "\rWriting: % 10u\n", address - address_start);
+    fprintf(stderr, "\rWriting: %10u\n", address - address_start);
     // Close
     close(sockfd);
 }
@@ -287,7 +287,7 @@ void command_set (const char *ip, int argc, char **argv)
     fprintf(stderr, "Write to 0x%08X value: %08X\n", address,value);
 
     // Convert to right format.
-    value = htobe32(value);
+    value = htole32(value);
     // Open socket
     sockfd=socket(AF_INET,SOCK_DGRAM,0);
     if(sockfd <  0) {
@@ -356,7 +356,7 @@ void command_get(const char *ip, int argc, char **argv)
     size_t m_r;
     recv_data ( sockfd, package, &m_r);
     unsigned int value = (package[0] | package[1] << 8 | package[2] << 16 | package[3] << 24);
-    value = be32toh(value);
+    value = le32toh(value);
     printf("Value: 0x%08X\n", value);
     // Close
     close(sockfd);
