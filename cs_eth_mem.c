@@ -159,8 +159,8 @@ void command_readimage(const char *ip, int argc, char **argv)
         exit(EXIT_FAILURE);
     }
     address = strtol(argv[0], NULL, 16);
-    width = strtol(argv[1], NULL, 16);
-    height = strtol(argv[2], NULL, 16);
+    width = strtol(argv[1], NULL, 10);
+    height = strtol(argv[2], NULL, 10);
     length = width*height*sizeof(int);
 
     fprintf(stderr, "Read 0x%08X bytes from 0x%08X\n", length, address);
